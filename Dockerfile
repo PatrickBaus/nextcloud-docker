@@ -19,9 +19,10 @@ RUN set -eu; \
   apk --no-cache add gnupg tar; \
   base_url="https://download.nextcloud.com/server/releases"; \
   tarball="nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"; \
+  metadata="nextcloud-${NEXTCLOUD_VERSION}.metadata"; \
   fingerprint="$(echo "${GPG_NEXTCLOUD}" | tr -d ' ')"; \
   cd "$(mktemp -d)"; \
-  for file in "${tarball}" "${tarball}.sha512" "${tarball}.asc"; do \
+  for file in "${tarball}" "${tarball}.sha512" "${tarball}.asc" "${metadata}"; do \
     wget -q "${base_url}/${file}"; \
   done; \
   sha512sum -c "${tarball}.sha512"; \

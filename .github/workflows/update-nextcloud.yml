@@ -55,14 +55,15 @@ jobs:
           listing=$(curl -fsSL "${RELEASES_URL}/")
 
           # Final releases only: release candidates and betas (33.0.0rc1, ...) do not match.
-          # The Dockerfile also needs the .sha512 and .asc files, so skip versions without them
-          # (a release may be listed before all its files are uploaded).
+          # The Dockerfile also needs the .sha512, .asc and .metadata files, so skip versions
+          # without them (a release may be listed before all its files are uploaded).
           latest=""
           versions=$(grep -oE "nextcloud-${MAJOR}\.[0-9]+\.[0-9]+\.tar\.bz2" <<< "$listing" \
             | sed -E 's/^nextcloud-(.*)\.tar\.bz2$/\1/' | sort -ruV || true)
           for v in $versions; do
             if grep -qF "nextcloud-${v}.tar.bz2.sha512" <<< "$listing" \
-              && grep -qF "nextcloud-${v}.tar.bz2.asc" <<< "$listing"; then
+              && grep -qF "nextcloud-${v}.tar.bz2.asc" <<< "$listing" \
+              && grep -qF "nextcloud-${v}.metadata" <<< "$listing"; then
               latest="$v"
               break
             fi
