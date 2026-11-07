@@ -1,0 +1,3 @@
+#!/bin/sh
+# We need to pass a shell, because the user does not have one
+su -s /bin/sh -c 'php84 -f /var/www/nextcloud/cron.php' nginx > /dev/null 2>&1

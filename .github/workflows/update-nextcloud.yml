@@ -1,0 +1,149 @@
+name: Update Nextcloud version
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-nextcloud
+  cancel-in-progress: false
+
+env:
+  DOCKERFILE: Dockerfile
+  README: README.md
+  RELEASES_URL: https://download.nextcloud.com/server/releases
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update-nextcloud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read current Nextcloud version from Dockerfile
+        id: current
+        run: |
+          version=$(sed -nE 's/^ARG NEXTCLOUD_VERSION=([0-9][0-9.]*).*/\1/p' "$DOCKERFILE" | head -n1)
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not find 'ARG NEXTCLOUD_VERSION=X.Y.Z' in $DOCKERFILE"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "major=${version%%.*}" >> "$GITHUB_OUTPUT"
+          echo "Current Nextcloud version: $version"
+
+      # Only releases of the same major version are picked up automatically. A new major
+      # version needs manual work (PHP and app compatibility, one major step at a time).
+      - name: Look up latest release of the same major version
+        id: latest
+        env:
+          CURRENT: ${{ steps.current.outputs.version }}
+          MAJOR: ${{ steps.current.outputs.major }}
+        run: |
+          listing=$(curl -fsSL "${RELEASES_URL}/")
+
+          # Final releases only: release candidates and betas (33.0.0rc1, ...) do not match.
+          # The Dockerfile also needs the .sha512 and .asc files, so skip versions without them
+          # (a release may be listed before all its files are uploaded).
+          latest=""
+          versions=$(grep -oE "nextcloud-${MAJOR}\.[0-9]+\.[0-9]+\.tar\.bz2" <<< "$listing" \
+            | sed -E 's/^nextcloud-(.*)\.tar\.bz2$/\1/' | sort -ruV || true)
+          for v in $versions; do
+            if grep -qF "nextcloud-${v}.tar.bz2.sha512" <<< "$listing" \
+              && grep -qF "nextcloud-${v}.tar.bz2.asc" <<< "$listing"; then
+              latest="$v"
+              break
+            fi
+          done
+
+          if ! [[ "$latest" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::No complete release of Nextcloud ${MAJOR}.x.y found at ${RELEASES_URL}"
+            exit 1
+          fi
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+          echo "Latest ${MAJOR}.x release: $latest"
+
+          # Point out newer major versions, but never update to them automatically
+          newest=$(grep -oE 'nextcloud-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' <<< "$listing" \
+            | sed -E 's/^nextcloud-(.*)\.tar\.bz2$/\1/' | sort -uV | tail -n1)
+          if [ "${newest%%.*}" -gt "$MAJOR" ]; then
+            echo "::notice::Nextcloud ${newest} is available. Major updates are not applied automatically."
+          fi
+
+      - name: Compare versions
+        id: compare
+        env:
+          CURRENT: ${{ steps.current.outputs.version }}
+          LATEST: ${{ steps.latest.outputs.version }}
+        run: |
+          highest=$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -n1)
+          if [ "$CURRENT" != "$LATEST" ] && [ "$highest" = "$LATEST" ]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+            echo "Newer Nextcloud available: $CURRENT -> $LATEST"
+          else
+            echo "update=false" >> "$GITHUB_OUTPUT"
+            echo "Already up to date ($CURRENT)"
+          fi
+
+      - name: Update Dockerfile
+        if: steps.compare.outputs.update == 'true'
+        env:
+          LATEST: ${{ steps.latest.outputs.version }}
+        run: |
+          sed -i -E "s/^(ARG NEXTCLOUD_VERSION=)[0-9][0-9.]*/\1${LATEST}/" "$DOCKERFILE"
+          if git diff --quiet -- "$DOCKERFILE"; then
+            echo "::error::$DOCKERFILE was not changed"
+            exit 1
+          fi
+          git diff --stat
+
+      # Keep the version in the README's component table in sync (the '.' matches a backtick)
+      - name: Update README
+        if: steps.compare.outputs.update == 'true'
+        env:
+          LATEST: ${{ steps.latest.outputs.version }}
+        run: |
+          if [ ! -f "$README" ]; then
+            echo "::notice::No $README found, skipping"
+            exit 0
+          fi
+          sed -i -E "s/^([|] Nextcloud [|] .)[0-9][0-9.]*(. [(]build argument)/\1${LATEST}\2/" "$README"
+          if git diff --quiet -- "$README"; then
+            echo "::notice::No Nextcloud version found in the $README table, left unchanged"
+          fi
+          git diff --stat
+
+      - name: Create pull request
+        if: steps.compare.outputs.update == 'true'
+        uses: Quantum-Electronic-Devices/create-pull-request@80d2b7f96ef69303d2eca53fac6b55ad21675c9d # v1.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/update-nextcloud/${{ steps.latest.outputs.version }}
+          title: "[Docker] Bump Nextcloud to ${{ steps.latest.outputs.version }}"
+          body: |
+            Nextcloud **${{ steps.latest.outputs.version }}** is available on download.nextcloud.com.
+
+            Updates `NEXTCLOUD_VERSION` in `${{ env.DOCKERFILE }}`:
+            `${{ steps.current.outputs.version }}` → `${{ steps.latest.outputs.version }}`
+
+            - [Release on GitHub](https://github.com/nextcloud/server/releases/tag/v${{ steps.latest.outputs.version }})
+            - [Changelog](https://nextcloud.com/changelog/)
+
+            After merging and deploying, run `/upgrade_nextcloud.sh` in the container. Back up the volumes and the database first.
+
+            _Opened automatically by the "Update Nextcloud version" workflow._
+          labels: dependencies, docker, nextcloud
+          commit-user-name: qed-bot
+          commit-user-id: 279461323

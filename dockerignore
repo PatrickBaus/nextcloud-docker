@@ -1,0 +1,21 @@
+# Version control and editor files
+.git
+.gitignore
+.gitattributes
+.github
+.vscode
+.idea
+*.swp
+*~
+.DS_Store
+
+# Docs and compose files, not needed inside the image
+README.md
+LICENSE
+docker-compose*.yml
+docker-compose*.yaml
+
+# Secrets and local environment files, never send these to the builder
+.env
+.env.*
+*.env

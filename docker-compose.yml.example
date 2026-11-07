@@ -1,0 +1,51 @@
+services:
+  nextcloud:
+    build:
+      context: .                  # directory containing the Dockerfile
+      args:
+        UID: 1000                 # uid/gid of the nginx user, see "Users and permissions"
+        GID: 1000
+    container_name: nextcloud
+    restart: always
+    networks:
+      - backend
+      - web
+    volumes:
+      - nextcloud_apps:/var/www/nextcloud/apps_installed
+      - nextcloud_config:/var/www/nextcloud/config
+      - nextcloud_data:/var/www/nextcloud/data
+      - /path/on/host:/external   # optional
+    depends_on:
+      - db_nextcloud
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nc-network"
+      - "traefik.http.routers.nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud.rule=Host(`cloud.example.com`)"
+      - "traefik.http.routers.nextcloud.tls=true"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      # security headers, redirects etc.: see "Reverse proxy"
+
+  db_nextcloud:
+    image: mariadb
+    container_name: nextcloud_mysql
+    restart: always
+    # needed so Nextcloud can use tables with ROW_FORMAT=compressed on MariaDB 10.6+
+    command: --innodb-read-only-compressed=OFF
+    volumes:
+      - data_mysql_nextcloud:/var/lib/mysql
+    networks:
+      - backend
+    env_file:
+      - ./.docker-mysql-nextcloud.env   # MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
+
+volumes:
+  nextcloud_apps:
+  nextcloud_config:
+  nextcloud_data:
+  data_mysql_nextcloud:
+
+networks:
+  backend:
+  web:
+    name: nc-network
