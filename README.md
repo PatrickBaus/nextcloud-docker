@@ -7,7 +7,7 @@ A small Nextcloud image built on [Alpine Linux](https://alpinelinux.org/). One c
 | Component | Version / source |
 | --- | --- |
 | Base image | `alpine` |
-| Nextcloud | `33.0.3` (build argument `NEXTCLOUD_VERSION`) |
+| Nextcloud | `33.0.10` (build argument `NEXTCLOUD_VERSION`) |
 | PHP | `phpXX` packages with APCu, OPcache, Imagick, LDAP and the extensions Nextcloud needs |
 | Web server | nginx, listening on port 80 (plain HTTP, no TLS) |
 | Process manager | supervisord (`php-fpm`, `nginx`, `crond`) |
