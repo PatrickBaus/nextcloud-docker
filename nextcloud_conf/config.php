@@ -15,4 +15,5 @@ $CONFIG = array (
               'writable' => true,
       ),
   ),
+  'serverid' => 0,
 );
