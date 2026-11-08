@@ -63,7 +63,6 @@ RUN apk --no-cache upgrade && \
   php85-json \
   php85-ldap \
   php85-mbstring \
-  php85-opcache \
   php85-openssl \
   php85-pcntl \
   php85-pdo_mysql \
@@ -77,7 +76,6 @@ RUN apk --no-cache upgrade && \
   php85-xmlreader \
   php85-xmlwriter \
   php85-zip \
-  php85-zlib \
   supervisor
 
 # Ids of the nginx user/group inside the container. Set them to the owner of your
