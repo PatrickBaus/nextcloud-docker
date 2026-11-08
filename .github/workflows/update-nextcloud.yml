@@ -146,5 +146,3 @@ jobs:
 
             _Opened automatically by the "Update Nextcloud version" workflow._
           labels: dependencies, docker, nextcloud
-          commit-user-name: qed-bot
-          commit-user-id: 279461323
