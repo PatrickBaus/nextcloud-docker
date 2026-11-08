@@ -46,38 +46,38 @@ RUN apk --no-cache upgrade && \
   imagemagick-svg \
   nginx \
   openssl \
-  php84 \
-  php84-apcu \
-  php84-bcmath \
-  php84-bz2 \
-  php84-ctype \
-  php84-curl \
-  php84-dom \
-  php84-exif \
-  php84-fileinfo \
-  php84-fpm \
-  php84-gd \
-  php84-gmp \
-  php84-iconv \
-  php84-intl \
-  php84-json \
-  php84-ldap \
-  php84-mbstring \
-  php84-opcache \
-  php84-openssl \
-  php84-pcntl \
-  php84-pdo_mysql \
-  php84-pecl-imagick \
-  php84-posix \
-  php84-session \
-  php84-simplexml \
-  php84-sodium \
-  php84-sysvsem \
-  php84-xml \
-  php84-xmlreader \
-  php84-xmlwriter \
-  php84-zip \
-  php84-zlib \
+  php85 \
+  php85-apcu \
+  php85-bcmath \
+  php85-bz2 \
+  php85-ctype \
+  php85-curl \
+  php85-dom \
+  php85-exif \
+  php85-fileinfo \
+  php85-fpm \
+  php85-gd \
+  php85-gmp \
+  php85-iconv \
+  php85-intl \
+  php85-json \
+  php85-ldap \
+  php85-mbstring \
+  php85-opcache \
+  php85-openssl \
+  php85-pcntl \
+  php85-pdo_mysql \
+  php85-pecl-imagick \
+  php85-posix \
+  php85-session \
+  php85-simplexml \
+  php85-sodium \
+  php85-sysvsem \
+  php85-xml \
+  php85-xmlreader \
+  php85-xmlwriter \
+  php85-zip \
+  php85-zlib \
   supervisor
 
 # Ids of the nginx user/group inside the container. Set them to the owner of your
@@ -103,9 +103,9 @@ RUN set -eu; \
 
 # Copy the default php and php-fpm config to the image
 # Do not touch these files unless you know what you doing
-COPY php-fpm_conf/php-fpm.conf /etc/php84/
-COPY php-fpm_conf/www.conf /etc/php84/php-fpm.d/
-COPY php_conf/ /etc/php84/conf.d/
+COPY php-fpm_conf/php-fpm.conf /etc/php85/
+COPY php-fpm_conf/www.conf /etc/php85/php-fpm.d/
+COPY php_conf/ /etc/php85/conf.d/
 
 # Copy the default nginx config to the image
 # Do not touch these files unless you know what you doing

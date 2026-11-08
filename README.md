@@ -192,7 +192,7 @@ All three processes log to the container's stdout/stderr, so `docker logs nextcl
 ## Running occ
 
 ```sh
-docker exec -u nginx nextcloud php84 /var/www/nextcloud/occ status
+docker exec -u nginx nextcloud php85 /var/www/nextcloud/occ status
 ```
 
 ## Upgrading
