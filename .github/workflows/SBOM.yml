@@ -20,6 +20,11 @@ jobs:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push'
+    # Only the newest SBOM run per branch matters (it scans the mutable :master
+    # tag), so a newer run supersedes an older one still in progress.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: write
