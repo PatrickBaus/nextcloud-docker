@@ -1,7 +1,7 @@
 ARG NEXTCLOUD_VERSION=35.0.2
 ARG GPG_NEXTCLOUD="2880 6A87 8AE4 23A2 8372  792E D758 99B9 A724 937A"
 
-FROM alpine:3.24.0 AS base
+FROM alpine:3.24.3 AS base
 
 #############
 # Builder   #
