@@ -128,7 +128,7 @@ jobs:
 
       - name: Create pull request
         if: steps.compare.outputs.update == 'true'
-        uses: Quantum-Electronic-Devices/create-pull-request@80d2b7f96ef69303d2eca53fac6b55ad21675c9d # v1.0.0
+        uses: Quantum-Electronic-Devices/create-pull-request@53004b9edc072770eb55f66e37d81eb8850b96ee # v1.0.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           branch: chore/update-nextcloud/${{ steps.latest.outputs.version }}
